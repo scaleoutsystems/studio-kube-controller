@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: studio-event-listener
+  name: studio-event-listener
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: studio-event-listener
+  template:
+    metadata:
+      labels:
+        name: studio-event-listener
+        app: stackn-studio
+        allow-api-access: "true"
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        image: k3d-registry:1234/studio-event:latest
+        imagePullPolicy: Always
+        name: studio-event-listener
+        resources:
+          limits:
+            cpu: 100m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 20Mi
+      restartPolicy: Always
