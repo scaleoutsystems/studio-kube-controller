@@ -19,8 +19,9 @@ spec:
         allow-api-access: "true"
     spec:
       automountServiceAccountToken: true
+      serviceAccountName: studio
       containers:
-        image: k3d-registry:1234/studio-event:latest
+      - image: k3d-registry:35187/studio-event:latest
         imagePullPolicy: Always
         name: studio-event-listener
         resources:
