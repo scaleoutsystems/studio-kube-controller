@@ -26,8 +26,6 @@ retry_interval = 10
 
 
 def get_token():
-    print("get_token")
-
     req = {
         "username": USERNAME,
         "password": PASSWORD,
@@ -82,9 +80,14 @@ def init_event_listener():
         pod = event["object"]
         status = pod.status.phase
         release = pod.metadata.labels["release"]
-        print(f"EVENT_TYPE: {event['type']}", flush=True)
-        print(f"STATUS: {status}", flush=True)
-        send_status_to_rest_api(release, status)
+
+        event_type = event["type"]
+
+        print(f"EVENT_TYPE: {event_type}", flush=True)
+
+        if event_type != "DELETED":
+            print(f"STATUS: {status}", flush=True)
+            send_status_to_rest_api(release, status)
 
 
 def send_status_to_rest_api(release, status):
@@ -104,8 +107,7 @@ def send_status_to_rest_api(release, status):
         APP_STATUS_URL, data=data, headers=headers, verify=False
     )
 
-    print(f"response.status_code: {response.status_code}")
-    print(f"POST TO: {APP_STATUS_URL}")
+    print(f"RESPONSE STATUS CODE: {response.status_code}")
 
 
 if __name__ == "__main__":
