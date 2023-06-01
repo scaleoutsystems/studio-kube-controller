@@ -1,14 +1,68 @@
 from kubernetes import client, config, watch
 
 import requests
+import time
 
 STUDIO_SERVICE_NAME = "studio-studio"
 STUDIO_SERVICE_PORT = "8080"
-ENDPOINT = "api/app/status"
+APP_STATUS_ENDPOINT = "api/app/status"
+TOKEN_ENDPOINT = "api/token-auth"
 
-URL = f"http://{STUDIO_SERVICE_NAME}:{STUDIO_SERVICE_PORT}/{ENDPOINT}"
+BASE_URL = f"http://{STUDIO_SERVICE_NAME}:{STUDIO_SERVICE_PORT}"
+APP_STATUS_URL = f"{BASE_URL}/{APP_STATUS_ENDPOINT}"
+TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}/"
 
-print(URL)
+USERNAME = "admin"
+PASSWORD = "hejjagarettpassword123"
+
+
+token = None
+
+# Number of retries
+max_retries = 10
+
+# Time to wait between retries (in seconds)
+retry_interval = 10
+
+
+def get_token():
+    print("get_token")
+
+    req = {
+        "username": USERNAME,
+        "password": PASSWORD,
+    }
+
+    for retry in range(max_retries):
+        print(f"retry: {retry}")
+
+        try:
+            res = requests.post(TOKEN_URL, json=req, verify=False)
+
+            print(f"TOKEN_URL: {TOKEN_URL}")
+            print(f"res.status_code: {res.status_code}")
+
+            if res.status_code == 200:
+                resp = res.json()
+
+                if "token" in resp:
+                    print("Token retrieved successfully.")
+                    global token
+                    token = resp["token"]
+                    break
+                else:
+                    print("Failed to fetch token.")
+                    print(res.text)
+
+        except requests.exceptions.RequestException:
+            # An exception occurred, service is not responding
+            if retry == max_retries - 1:
+                # Maximum retries reached, handle the failure
+                print("Service did not respond.")
+                break
+
+            # Wait for the specified interval before retrying
+            time.sleep(retry_interval)
 
 
 def init_event_listener():
@@ -39,22 +93,21 @@ def send_status_to_rest_api(release, status):
     """
     print(f"UPDATE: {release} to {status}", flush=True)
 
-    headers = {
-        "Authorization": "Token 2a493c77bc06b9d7f65f5135b6790bf6afa8ad02"
-    }
+    headers = {"Authorization": f"Token {token}"}
 
     data = {
         "release": release,
         "status": status,
     }
 
-    print("now with POST!!!")
-
-    response = requests.post(URL, data=data, headers=headers, verify=False)
+    response = requests.post(
+        APP_STATUS_URL, data=data, headers=headers, verify=False
+    )
 
     print(f"response.status_code: {response.status_code}")
-    print(f"POST TO: {URL}")
+    print(f"POST TO: {APP_STATUS_URL}")
 
 
 if __name__ == "__main__":
+    get_token()
     init_event_listener()
