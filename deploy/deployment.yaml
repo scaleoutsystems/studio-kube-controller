@@ -21,7 +21,8 @@ spec:
       automountServiceAccountToken: true
       serviceAccountName: studio
       containers:
-      - image: k3d-registry:35187/studio-event:latest
+      # - image: k3d-registry:35187/studio-event:latest
+      - image: localhost:32000/event-listener:latest
         imagePullPolicy: Always
         name: studio-event-listener
         resources:
@@ -31,4 +32,17 @@ spec:
           requests:
             cpu: 50m
             memory: 20Mi
+        env:
+        - name: EVENT_LISTENER_USERNAME
+          value: "event_listener_user"
+        - name: EVENT_LISTENER_PASSWORD
+          value: "xDJd6G6cAp"
+        - name: STUDIO_SERVICE_NAME
+          value: "studio-studio"
+        - name: STUDIO_SERVICE_PORT
+          value: "8080"
+        - name: APP_STATUS_ENDPOINT
+          value: "api/app/status"
+        - name: TOKEN_ENDPOINT
+          value: "api/token-auth/"
       restartPolicy: Always

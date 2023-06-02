@@ -1,20 +1,23 @@
 from kubernetes import client, config, watch
 
+import os
 import requests
 import time
 
-STUDIO_SERVICE_NAME = "studio-studio"
-STUDIO_SERVICE_PORT = "8080"
-APP_STATUS_ENDPOINT = "api/app/status"
-TOKEN_ENDPOINT = "api/token-auth"
+STUDIO_SERVICE_NAME = os.environ.get("STUDIO_SERVICE_NAME", None)
+STUDIO_SERVICE_PORT = os.environ.get("STUDIO_SERVICE_PORT", None)
+APP_STATUS_ENDPOINT = os.environ.get("APP_STATUS_ENDPOINT", None)
+TOKEN_ENDPOINT = os.environ.get("TOKEN_ENDPOINT", None)
 
 BASE_URL = f"http://{STUDIO_SERVICE_NAME}:{STUDIO_SERVICE_PORT}"
 APP_STATUS_URL = f"{BASE_URL}/{APP_STATUS_ENDPOINT}"
-TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}/"
+TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}"
 
-USERNAME = "admin"
-PASSWORD = "hejjagarettpassword123"
+USERNAME = os.environ.get("EVENT_LISTENER_USERNAME", None)
+PASSWORD = os.environ.get("EVENT_LISTENER_PASSWORD", None)
 
+print(f"APP_STATUS_URL: {APP_STATUS_URL}")
+print(f"TOKEN_URL: {TOKEN_URL}")
 
 token = None
 
@@ -37,8 +40,7 @@ def get_token():
         try:
             res = requests.post(TOKEN_URL, json=req, verify=False)
 
-            print(f"TOKEN_URL: {TOKEN_URL}")
-            print(f"res.status_code: {res.status_code}")
+            print(f"Get token res.status_code: {res.status_code}")
 
             if res.status_code == 200:
                 resp = res.json()
@@ -91,9 +93,6 @@ def init_event_listener():
 
 
 def send_status_to_rest_api(release, status):
-    """
-    TODO: Send the updated status phase to studio REST-API endpoint
-    """
     print(f"UPDATE: {release} to {status}", flush=True)
 
     headers = {"Authorization": f"Token {token}"}
