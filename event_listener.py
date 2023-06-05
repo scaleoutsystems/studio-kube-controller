@@ -107,6 +107,7 @@ def send_status_to_rest_api(release, status):
     )
 
     print(f"RESPONSE STATUS CODE: {response.status_code}")
+    print(f"RESPONSE TEXT: {response.text}")
 
 
 if __name__ == "__main__":
