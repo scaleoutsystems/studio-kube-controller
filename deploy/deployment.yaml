@@ -1,3 +1,4 @@
+# Intended to be used with docker-compose file in the studio or stackn repository.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,10 +19,8 @@ spec:
         app: stackn-studio
         allow-api-access: "true"
     spec:
-      automountServiceAccountToken: true
-      serviceAccountName: studio
       containers:
-      - image: k3d-registry:35187/studio-event:latest
+      - image: ghcr.io/scaleoutsystems/studio-kube-controller:feature-sk-486
         imagePullPolicy: Always
         name: studio-event-listener
         resources:
@@ -31,4 +30,17 @@ spec:
           requests:
             cpu: 50m
             memory: 20Mi
+        env:
+        - name: EVENT_LISTENER_USERNAME
+          value: "<username-set-in-docker-compose-file>"
+        - name: EVENT_LISTENER_PASSWORD
+          value: "<password-set-in-docker-compose-file>"
+        - name: STUDIO_SERVICE_NAME
+          value: "<host-machine-ip>"
+        - name: STUDIO_SERVICE_PORT
+          value: "8080"
+        - name: APP_STATUS_ENDPOINT
+          value: "api/app/status"
+        - name: TOKEN_ENDPOINT
+          value: "api/token-auth/"
       restartPolicy: Always
