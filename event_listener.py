@@ -18,6 +18,13 @@ TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}"
 USERNAME = os.environ.get("EVENT_LISTENER_USERNAME", None)
 PASSWORD = os.environ.get("EVENT_LISTENER_PASSWORD", None)
 
+K8S_STATUS_MAP = {
+    "CrashLoopBackOff": "Error",
+    "Completed": "Retrying...",
+    "ContainerCreating": "Created",
+    "PodInitializing": "Pending",
+}
+
 token = None
 
 # Number of retries
@@ -128,8 +135,10 @@ def init_event_listener():
 
 
 def get_status(pod):
-    print("Getting status...")
-
+    """
+    Returns the status of a pod by looping through each container
+    and checking the status.
+    """
     container_statuses = pod.status.container_statuses
 
     if container_statuses is not None:
@@ -140,23 +149,27 @@ def get_status(pod):
                 terminated = state.terminated
 
                 if terminated is not None:
-                    return terminated.reason
+                    reason = terminated.reason
+                    return mapped_status(reason)
 
                 waiting = state.waiting
 
                 if waiting is not None:
-                    return waiting.reason
-
-                running = state.running
-
-                if running is not None:
-                    return "Running"
-
-            print("Last state not found.")
-    else:
-        print("Container statuses not found.")
+                    reason = waiting.reason
+                    return mapped_status(reason)
+        else:
+            running = state.running
+            ready = container_status.ready
+            if running and ready:
+                return "Running"
+            else:
+                return "Pending"
 
     return pod.status.phase
+
+
+def mapped_status(reason: str) -> str:
+    return K8S_STATUS_MAP.get(reason, reason)
 
 
 def post(url, data):
