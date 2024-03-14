@@ -2,7 +2,6 @@ from kubernetes import client, config, watch
 
 import os
 import requests
-import time
 
 STUDIO_SERVICE_NAME = os.environ.get("STUDIO_SERVICE_NAME", None)
 STUDIO_SERVICE_PORT = os.environ.get("STUDIO_SERVICE_PORT", None)
@@ -15,8 +14,10 @@ APP_STATUS_URL = f"{BASE_URL}/{APP_STATUS_ENDPOINT}"
 APP_STATUSES_URL = f"{BASE_URL}/{APP_STATUSES_ENDPOINT}"
 TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}"
 
-USERNAME = os.environ.get("EVENT_LISTENER_USERNAME", None)
-PASSWORD = os.environ.get("EVENT_LISTENER_PASSWORD", None)
+print(f"STUDIO_SERVICE_NAME: {STUDIO_SERVICE_NAME}", flush=True)
+print(f"STUDIO_SERVICE_PORT: {STUDIO_SERVICE_PORT}", flush=True)
+print(f"APP_STATUS_ENDPOINT: {APP_STATUS_ENDPOINT}", flush=True)
+print(f"APP_STATUSES_ENDPOINT: {APP_STATUSES_ENDPOINT}", flush=True)
 
 K8S_STATUS_MAP = {
     "CrashLoopBackOff": "Error",
@@ -42,43 +43,6 @@ label_selector = "type=app"
 namespace = "default"
 
 latest_status = {}
-
-
-def get_token():
-    req = {
-        "username": USERNAME,
-        "password": PASSWORD,
-    }
-
-    for retry in range(max_retries):
-        print(f"retry: {retry}")
-
-        try:
-            res = requests.post(TOKEN_URL, json=req, verify=False)
-
-            if res.status_code == 200:
-                resp = res.json()
-
-                if "token" in resp:
-                    print("Token retrieved successfully.")
-                    global token
-                    token = resp["token"]
-                    return True
-                else:
-                    print("Failed to fetch token.")
-                    print(res.text)
-
-        except requests.exceptions.RequestException:
-            # An exception occurred, service is not responding
-            if retry == max_retries - 1:
-                # Maximum retries reached, handle the failure
-                print("Service did not respond.")
-                break
-
-            # Wait for the specified interval before retrying
-            time.sleep(retry_interval)
-
-    return False
 
 
 def sync_all_statuses():
@@ -172,11 +136,9 @@ def mapped_status(reason: str) -> str:
     return K8S_STATUS_MAP.get(reason, reason)
 
 
-def post(url, data):
+def post(url: str, data: dict):
     try:
-        headers = {"Authorization": f"Token {token}"}
-
-        response = requests.post(url, data=data, headers=headers, verify=False)
+        response = requests.post(url, data=data, verify=False)
 
         print(f"RESPONSE STATUS CODE: {response.status_code}")
         print(f"RESPONSE TEXT: {response.text}")
@@ -186,8 +148,7 @@ def post(url, data):
 
 
 if __name__ == "__main__":
-    success = get_token()
+    print("Starting event listener...", flush=True)
 
-    if success:
-        sync_all_statuses()
-        init_event_listener()
+    sync_all_statuses()
+    init_event_listener()
