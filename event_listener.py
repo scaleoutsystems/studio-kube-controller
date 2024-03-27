@@ -7,12 +7,10 @@ STUDIO_SERVICE_NAME = os.environ.get("STUDIO_SERVICE_NAME", None)
 STUDIO_SERVICE_PORT = os.environ.get("STUDIO_SERVICE_PORT", None)
 APP_STATUS_ENDPOINT = os.environ.get("APP_STATUS_ENDPOINT", None)
 APP_STATUSES_ENDPOINT = os.environ.get("APP_STATUSES_ENDPOINT", None)
-TOKEN_ENDPOINT = os.environ.get("TOKEN_ENDPOINT", None)
 
 BASE_URL = f"http://{STUDIO_SERVICE_NAME}:{STUDIO_SERVICE_PORT}"
 APP_STATUS_URL = f"{BASE_URL}/{APP_STATUS_ENDPOINT}"
 APP_STATUSES_URL = f"{BASE_URL}/{APP_STATUSES_ENDPOINT}"
-TOKEN_URL = f"{BASE_URL}/{TOKEN_ENDPOINT}"
 
 print(f"STUDIO_SERVICE_NAME: {STUDIO_SERVICE_NAME}", flush=True)
 print(f"STUDIO_SERVICE_PORT: {STUDIO_SERVICE_PORT}", flush=True)
@@ -25,14 +23,6 @@ K8S_STATUS_MAP = {
     "ContainerCreating": "Created",
     "PodInitializing": "Pending",
 }
-
-token = None
-
-# Number of retries
-max_retries = 10
-
-# Time to wait between retries (in seconds)
-retry_interval = 10
 
 config.incluster_config.load_incluster_config()
 
